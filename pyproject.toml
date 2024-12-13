@@ -1,0 +1,25 @@
+[tool.poetry]
+package-mode = false
+name = "iasd-works"
+version = "0.1.0"
+description = "This is a repository with all my projects of the master IASD (Artificial Intelligence, Systems and Data) - University Dauphine-PSL"
+authors = ["Pierre Neveu"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+numpy = ">=1.26.0,<2.1.0"
+gymnasium = "^1.0.0"
+ipykernel = "^6.29.5"
+matplotlib = "^3.9.3"
+pybind11 = "^2.13.6"
+tensorflow-io-gcs-filesystem = "^0.37.1"
+tensorflow = "^2.10.0"
+keras = "^3.7.0"
+
+[tool.poetry.group.dev.dependencies]
+pybind11 = "^2.13.6"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
