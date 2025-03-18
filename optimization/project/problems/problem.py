@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
 
+
 class Problem(ABC):
 
     @abstractmethod
-    def fun(self): pass
+    def loss(self):
+        pass
 
     @abstractmethod
-    def grad(self): pass
+    def step(self):
+        pass

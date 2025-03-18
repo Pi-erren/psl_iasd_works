@@ -5,12 +5,11 @@ from problems.regression import RegPb
 
 
 def gd(
-    w0,
     problem,
-    grad_dist_criteria=None,
-    stepchoice=None,
+    stepchoice=0,
     init_step=1,
     n_iter=1000,
+    grad_dist_criteria=None,
     verbose=False,
 ):
     """
@@ -33,53 +32,39 @@ def gd(
 
     Sorties:
         w_output: Dernier itéré de la méthode
-        objvals: Historique de valeurs de fonctions (tableau Numpy de taille n_iter+1)
+        loss_val: Historique de valeurs de fonctions (tableau Numpy de taille n_iter+1)
         distits: Historique de distances à l'optimum cible (tableau Numpy de taille n_iter+1)
-        ngvals: Historique de normes de gradient (Numpy array of length n_iter)
-
     """
     if stepchoice is None:
         return ValueError("Please select a stepchoice")
 
     # Utils variables
-    objvals = []
-    ngvals = []
-    L = problem.lipgrad()
-    w = w0.copy()
+    loss_val = []
     k = 0
-
-    # Initial algo values
-    objvals.append(problem.fun(w))  # init. objective fct
-    g = problem.grad(w)  # init. gradient value
-    ngvals.append(norm(g))
 
     # Algorithm loop
     while k < n_iter:
         s = choose_step_size(stepchoice, init_step, k)
-
-        # Update params
-        # w = problem.update_parameters()
-        w[:] = w - s * g
+        problem.step(s)
+        curr_loss = problem.loss()
 
         if verbose:
             print(
                 " | ".join(
                     [
                         ("%d" % k).rjust(8),
-                        ("%.2e" % problem.fun(w)).rjust(8),
+                        ("%.2e" % curr_loss).rjust(8),
                         ("%.2e" % s).rjust(8),
                     ]
                 )
             )
 
         # Update algo values
-        objvals.append(problem.fun(w))
-        g = problem.grad(w)
-        ngvals.append(norm(g))
+        # if
+        loss_val.append(curr_loss.detach().numpy())
         k += 1
-
-    w_output = w.copy()
-    return w_output, np.array(objvals), np.array(ngvals)
+    # if is
+    return np.array(loss_val)
 
 
 def choose_step_size(mode, init_step, k):

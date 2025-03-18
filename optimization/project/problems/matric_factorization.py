@@ -4,13 +4,13 @@ from scipy.linalg import svdvals  # Décomposition en valeurs singulières
 import torch
 from torch import nn
 
-from problem import Problem
-from utils.utils import frobenius_norm
+from problems.problem import Problem
 
 
 class MatFactPb(Problem):
     """
-    Matrix factorization problem class
+    Matrix factorization problem class.
+    For the sake of simplicity, we use pytorch to differentiate the frobenius norm.
 
     Attributs:
         u: vercteur de données (attributs)
@@ -27,20 +27,42 @@ class MatFactPb(Problem):
     def __init__(self, U, V, X, lambda_reg=0):
         self.U = torch.tensor(U)
         self.U.requires_grad = True
+        self.U_grad_norm_list = []
+
         self.V = torch.tensor(U)
         self.V.requires_grad = True
-        self.X = torch.tensor(X)
-        self.n1, self.n2 = self.U.shape[0], self.V.shape[0]
-        self.n, self.d = self.X.shape
-        self.lambda_reg = lambda_reg
-        self.optimizer = torch.optim.SGD
+        self.V_grad_norm_list = []
 
-    def fun(self, U, V, X, lambda_reg):
-        return frobenius_norm(U, V, X, lambda_reg)
+        self.avg_grad_norm_list = []
+
+        self.X = torch.tensor(X)
+        self.lambda_reg = lambda_reg
+        self.optimizer = torch.optim.SGD(params=[self.U, self.V], lr=1)
+
+    # Loss using Frobenius norm
+    def loss(self):
+        UV = self.U @ self.V.T
+        n = UV.shape[0] * UV.shape[1]
+        loss = (1 / (2 * n)) * (torch.norm(UV - self.X, p="fro") ** 2)
+        reg = (self.lambda_reg / 2) * (
+            (torch.norm(self.U, p="fro") ** 2 + torch.norm(self.V, p="fro") ** 2)
+        )
+        return loss + reg
 
     # Calcul de gradient
-    def step(self, *args):
-        
-        return self.U.grad, self.V.grad
+    def step(self, s):
+        for param_group in self.optimizer.param_groups:
+            param_group["lr"] = s
 
- 
+        # Compute one gradient algorithm step
+        loss = self.loss()
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        # Store gradient history
+        U_norm_grad = torch.norm(self.U.grad, p="fro").item()
+        V_norm_grad = torch.norm(self.V.grad, p="fro").item()
+        self.U_grad_norm_list.append(U_norm_grad)
+        self.V_grad_norm_list.append(V_norm_grad)
+        self.avg_grad_norm_list.append(np.mean([U_norm_grad, V_norm_grad]))
