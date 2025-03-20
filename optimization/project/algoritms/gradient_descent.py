@@ -1,19 +1,21 @@
+import torch
 import numpy as np
 from scipy.linalg import norm  # Norm euclidienne (correspondant au produit scalaire)
 from scipy.linalg import svdvals  # Décomposition en valeurs singulières
 from problems.regression import RegPb
 
 
-def gd(
+def sgd(
     problem,
     stepchoice=0,
     init_step=1,
     n_iter=1000,
+    batch_size=1,
     grad_dist_criteria=None,
     verbose=False,
 ):
     """
-    Most of this function was borrowed from Clément Royer: https://www.lamsade.dauphine.fr/%7Ecroyer/ensdocs/OAA/LabOAA-DescenteGradient-solutions.zip
+    This function was highly inspired from Clément Royer: https://www.lamsade.dauphine.fr/%7Ecroyer/ensdocs/OAA/LabOAA-DescenteGradient-solutions.zip
     Implémentation de descente de gradient avec différentes tailles de pas.
 
     Entrées:
@@ -44,26 +46,22 @@ def gd(
 
     # Algorithm loop
     while k < n_iter:
+        # Update stepsize (e.g. learning rate)
         s = choose_step_size(stepchoice, init_step, k)
-        problem.step(s)
-        curr_loss = problem.loss()
+
+        # Drawing batch indices
+        indices = np.random.choice(problem.n, size=batch_size, replace=False)
+
+        # Proceed to a gradient descent step (w = w - lr * gradient)
+        problem.step(s, indices)
+
+        # Get curr loss for visualization
+        curr_loss = problem.loss().item()
+        loss_val.append(curr_loss)
 
         if verbose:
-            print(
-                " | ".join(
-                    [
-                        ("%d" % k).rjust(8),
-                        ("%.2e" % curr_loss).rjust(8),
-                        ("%.2e" % s).rjust(8),
-                    ]
-                )
-            )
-
-        # Update algo values
-        # if
-        loss_val.append(curr_loss.detach().numpy())
+            print(f"k: {k} | loss: {curr_loss:.2e} | lr: {s:.2e}")
         k += 1
-    # if is
     return np.array(loss_val)
 
 
@@ -74,4 +72,4 @@ def choose_step_size(mode, init_step, k):
         return init_step
     elif mode > 0:
         # Taille de pas décroissante
-        return init_step / (k + 1) ** mode
+        return init_step / ((k + 1) ** mode)

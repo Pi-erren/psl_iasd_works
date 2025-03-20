@@ -29,13 +29,14 @@ class MatFactPb(Problem):
         self.U.requires_grad = True
         self.U_grad_norm_list = []
 
-        self.V = torch.tensor(U)
+        self.V = torch.tensor(V)
         self.V.requires_grad = True
         self.V_grad_norm_list = []
 
         self.avg_grad_norm_list = []
 
         self.X = torch.tensor(X)
+        self.n, self.d = self.X.shape[0], self.X[0]
         self.lambda_reg = lambda_reg
         self.optimizer = torch.optim.SGD(params=[self.U, self.V], lr=1)
 
@@ -49,13 +50,30 @@ class MatFactPb(Problem):
         )
         return loss + reg
 
+    def loss_i(self, indices):
+        # Draw batch for each component
+        U_batch = self.U[indices, :]
+        V_batch = self.V[indices, :]
+        UV_batch = U_batch @ V_batch.T
+        X_batch = self.X[indices, :]
+        # UV = self.U @ self.V.T
+        # UV_batch = UV[indices, :]
+        # n = UV_batch.shape[0] * UV_batch.shape[1]
+
+        # Compute objective function
+        loss = (1 / (2 * self.n)) * (torch.norm(UV_batch - X_batch, p="fro") ** 2)
+        reg = (self.lambda_reg / 2) * (
+            (torch.norm(self.U, p="fro") ** 2 + torch.norm(self.V, p="fro") ** 2)
+        )
+        return (loss + reg) / len(indices)
+
     # Calcul de gradient
-    def step(self, s):
+    def step(self, s, indices):
         for param_group in self.optimizer.param_groups:
             param_group["lr"] = s
 
         # Compute one gradient algorithm step
-        loss = self.loss()
+        loss = self.loss_i(indices)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

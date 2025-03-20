@@ -27,14 +27,16 @@ class RegPb(Problem):
         self.w = w
         self.w_list = [self.w]  # Keep track of parameters
         self.g_norm_list = []  # Keep track of gradients norm
+        self.loss_vals = []
         self.n, self.d = X.shape
         self.lambda_reg = lambda_reg
 
-    def step(self, s):
-        g = self.grad()
-        self.w = self.w - s * g
+    def step(self, s, indices):
+        sg = np.mean([self.grad_i(i) for i in indices], axis=0)
+        self.w = self.w - s * sg
         self.w_list.append(self.w)
-        self.g_norm_list.append(norm(g))
+        self.g_norm_list.append(norm(sg))
+        self.loss_vals.append(self.loss())
 
     # Fonction objectif
     def loss(self):
@@ -43,12 +45,10 @@ class RegPb(Problem):
             + self.lambda_reg * norm(self.w) ** 2 / 2.0
         )
 
-    # Calcul de gradient
-    def grad(self):
-        return (
-            self.X.T.dot(self.X.dot(self.w) - self.y) / self.n
-            + self.lambda_reg * self.w
-        )
+    # Gradient for one "data point"
+    def grad_i(self, i):
+        x_i = self.X[i]
+        return (x_i.dot(self.w) - self.y[i]) * x_i + self.lambda_reg * self.w
 
     # Constante de Lipschitz pour le gradient
     def lipgrad(self):
