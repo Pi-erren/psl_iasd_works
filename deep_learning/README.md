@@ -5,7 +5,7 @@
 * Course: Deep Learning
 * University: PSL - Paris Dauphine
 
-**Please see Experiments_Report.pdf where we explain my work**
+**Please see DL_Report.pdf where I explain my work**
 
 ## Context
 
