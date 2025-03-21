@@ -25,7 +25,21 @@ will not be saved if you close your notebook.
 !unzip project2025.zip
 ```
 ## Environment
-This project was developped on a Google Colab Notebook in 01/01/2025.
+This project was developped with a Google Colab Notebook and Google Drive in 01/01/2025.
+
+```python
+path_to_project = '/content/drive/MyDrive/Deep_Learning-Go_Project/Game' # Update with your path
+
+from google.colab import drive
+import os
+
+# Import google drive
+drive.mount('/content/drive')
+
+# Navigate to the project directory.
+os.chdir(path_to_project)
+!ls
+```
 
 ## Tensorflow version
 This project was developped under tensorflow 2.15.0.
