@@ -1,4 +1,4 @@
-# Experimenting the impact of stochasticity and policy choice on TD(0) Agents behavior
+# Implementing state-of-the-art networks for the game of Go
 
 
 * Authors: Neveu Pierre
